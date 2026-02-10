@@ -1,67 +1,36 @@
 import requests
-from Auth.constants import BASE_URL, AUTH_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
+from Cinemascope.constants import BASE_URL, AUTH_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
+from Cinemascope.api.auth_api import AuthAPI
 import pytest
-from Auth.utils.data_generator import Datagenerator
-from Auth.utils.custom_requester import CustomRequester
-from Auth.api.api_manager import CinemaApiManager
 import time
-@pytest.fixture
-def movies_data():
-
-
-    unique_name = f"Тестовый фильм {int(time.time())}"
-    return {
-        "name":  unique_name,
-        "imageUrl": "https://example.com/image.jpg",
-        "price": 350,
-        "description": "Эпичная фантастика о путешествиях сквозь червоточины",
-        "location": "MSK",
-        "published": True,
-        "genreId": 1
-
-    }
-
-
+from Cinemascope.utils.data_generator import Datagenerator
 ADMIN_CREDENTIALS = {
-    "email": "api1@gmail.com",
-    "password": "asdqwe123Q"
+	"email": "api1@gmail.com",
+	"password": "asdqwe123Q"
 }
 
 
 @pytest.fixture(scope="session")
 def auth_session():
-
-
-
 	session = requests.Session()
 	session.headers.update(HEADERS)
 
-	# Логинимся с админскими кредами
-	response = session.post(
-		f"{AUTH_URL.rstrip('/')}{LOGIN_ENDPOINT}",
-		json=ADMIN_CREDENTIALS
-	)
+	# Создаем AuthAPI клиент
+	auth_api = AuthAPI(session)
 
-	print(f"Статус логина: {response.status_code}")
+	try:
+		token = auth_api.authenticate(
+			email=ADMIN_CREDENTIALS["email"],
+			password=ADMIN_CREDENTIALS["password"]
+		)
 
-	if response.status_code != 200:
-		print(f"Ошибка логина: {response.text}")
-		raise Exception(f"Не удалось залогиниться как админ: {response.status_code}")
-
-	token = response.json().get("accessToken")
-	if not token:
-		print("Токен не получен!")
-		print(f"Полный ответ: {response.text}")
-		raise Exception("Токен не получен в ответе")
-
-	print(f"✅ Токен получен: {token[:50]}...")
-
-
-	session.headers.update({"Authorization": f"Bearer {token}"})
-	print(f"🔐 Заголовки сессии: {dict(session.headers)}")
+		print(f"Успешная аутентификация")
+	except Exception as e:
+		# Если что-то пошло не так, authenticate уже выбросил исключение
+		print(f"Ошибка аутентификации: {e}")
+		raise
 
 	return session
-
 
 
 @pytest.fixture(scope="session")
@@ -76,9 +45,30 @@ def session():
 
 @pytest.fixture(scope="session")
 def api_manager(auth_session):
-    """
-    Фикстура для создания экземпляра CinemaApiManager.
-    Используем auth_session (с токеном), а не обычную session.
-    """
-    from Auth.api.api_manager import CinemaApiManager  # ← можно импортировать здесь
-    return CinemaApiManager(auth_session, BASE_URL)
+	"""
+	Фикстура для создания экземпляра CinemaApiManager.
+	Используем auth_session (с токеном), а не обычную session.
+	"""
+	from Cinemascope.api.api_manager import CinemaApiManager  # ← можно импортировать здесь
+	return CinemaApiManager(auth_session, BASE_URL)
+
+
+@pytest.fixture
+def movies_data():
+	return Datagenerator.generate_movie_data()
+
+@pytest.fixture
+def created_movie(api_manager, movies_data):
+	response = api_manager.movies_api.create_movie(movies_data, 201)
+	return response.json()["id"]
+
+@pytest.fixture
+def update_payload():
+	update_data = {
+			"description": "Обновлённое описание",
+			"price": 200,
+			"location": "SPB",
+			"published": False
+		}
+	return update_data
+

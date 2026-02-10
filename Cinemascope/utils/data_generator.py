@@ -1,6 +1,7 @@
 
 import random
 import string
+import time
 from faker import Faker
 
 faker = Faker()
@@ -43,12 +44,11 @@ class Datagenerator:
 
 	@staticmethod
 	def generate_unique_movie_name():
-		"""Генерирует уникальное название фильма"""
-		import time
 		timestamp = int(time.time())
-		adjectives = ["Эпичный", "Захватывающий", "Невероятный", "Великолепный"]
-		nouns = ["Приключение", "Путешествие", "Открытие", "Миссия"]
-		return f"{adjectives[timestamp % 4]} {nouns[(timestamp // 4) % 4]} {timestamp}"
+		adjectives = ["Великий", "Страшный", "Смешной", "Загадочный", "Эпичный"]
+		titles = ["Фильм", "Кино", "История", "Приключение", "Сюжет"]
+		random_word = random.choice(adjectives) + " " + random.choice(titles)
+		return f"{random_word} {timestamp}"
 
 	@staticmethod
 	def generate_movie_data():

@@ -1,0 +1,24 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="false" level="WARNING" enabled_by_default="false">
+      <option name="ignoredPackages">
+        <list>
+          <option value="colorama" />
+          <option value="execnet" />
+          <option value="iniconfig" />
+          <option value="Jinja2" />
+          <option value="MarkupSafe" />
+          <option value="packaging" />
+          <option value="pluggy" />
+          <option value="Pygments" />
+          <option value="pytest" />
+          <option value="pytest-html" />
+          <option value="pytest-metadata" />
+          <option value="pytest-xdist" />
+          <option value="python-dotenv" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
