@@ -25,29 +25,23 @@ class AuthAPI(CustomRequester):
 		if "accessToken" not in response_json:
 			raise KeyError("token is missing")
 
-		token = response_json["accessToken"]  # ← используем response_json!
+		token = response_json["accessToken"]
 		self._update_session_headers(**{"Authorization": f"Bearer {token}"})
 
 		return token
 
-
 	def login_user(self, login_data, expected_status=200):
-
 		return self.send_request(
-		method="POST",
-		endpoint=LOGIN_ENDPOINT,
-		data=login_data,
-		expected_status=expected_status
-	)
-
+			method="POST",
+			endpoint=LOGIN_ENDPOINT,
+			data=login_data,
+			expected_status=expected_status
+		)
 
 	def register_user(self, user_data, expected_status=201):
-
 		return self.send_request(
-		method="POST",
-		endpoint=REGISTER_ENDPOINT,
-		data=user_data,
-		expected_status=expected_status
-	)
-
-
+			method="POST",
+			endpoint=REGISTER_ENDPOINT,
+			data=user_data,
+			expected_status=expected_status
+		)

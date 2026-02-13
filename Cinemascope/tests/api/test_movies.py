@@ -1,21 +1,17 @@
 # Cinemascope/test_movies.py
-import pytest
 import math
 
 
 class TestCinemaScope:
 	def test_create_movie(self, api_manager, movies_data):
-		print("1. Создание фильма")
 		response = api_manager.movies_api.create_movie(movies_data, 201)
-		created_movie = response.json()
-		movie_id = created_movie.get('id')
-		assert "id" in created_movie, "Фильм не создан"
-		assert created_movie['name'] == movies_data['name'], "Название фильма не совпадает"
-		assert created_movie['price'] == movies_data['price'], "Цена фильма не совпадает"
-		assert created_movie['description'] == movies_data['description'], "Описание фильма не совпадает"
+		created_movies = response.json()
+		assert "id" in created_movies, "Фильм не создан"
+		assert created_movies['name'] == movies_data['name'], "Название фильма не совпадает"
+		assert created_movies['price'] == movies_data['price'], "Цена фильма не совпадает"
+		assert created_movies['description'] == movies_data['description'], "Описание фильма не совпадает"
 
 	def test_get_movie(self, api_manager, created_movie, movies_data):
-		print("2. Проверка создания фильма")
 		response = api_manager.movies_api.get_movie(created_movie, 200)
 		movie = response.json()
 		assert "id" in movie, "Фильм не создан"
@@ -24,24 +20,21 @@ class TestCinemaScope:
 		assert movie['description'] == movies_data['description'], "Описание фильма не совпадает"
 
 	def test_update_movie(self, api_manager, created_movie, movies_data, update_payload):
-		print("3. Проверка обновления фильма")
-		response = api_manager.movies_api.update_movie(created_movie, update_payload, 200)
+		api_manager.movies_api.update_movie(created_movie, update_payload, 200)
 		get_response = api_manager.movies_api.get_movie(created_movie, 200)
 		updated_movie = get_response.json()
 		assert updated_movie["id"] == created_movie
 		assert updated_movie["name"] == movies_data["name"], "Имя фильма изменилось (не должно было!)"
-		assert updated_movie['location'] == update_payload['location'], "Cтрана фильма не совпадает"
+		assert updated_movie['location'] == update_payload['location'], "Страна фильма не совпадает"
 		assert updated_movie['published'] == update_payload['published'], "Опубликовано"
 		assert updated_movie['price'] == update_payload['price'], "Цена фильма не совпадает"
 		assert updated_movie['description'] == update_payload['description'], "Описание фильма не совпадает"
 
 	def test_delete_movie(self, api_manager, created_movie, movies_data):
-		print("4. Проверка удаления фильма")
-		response = api_manager.movies_api.delete_movie(created_movie, 200)
-		get_response = api_manager.movies_api.get_movie(created_movie, 404)
+		api_manager.movies_api.delete_movie(created_movie, 200)
+		api_manager.movies_api.get_movie(created_movie, 404)
 
 	def test_get_movies_list(self, api_manager):
-		print("5. Проверяем фильтрацию списка фильмов")
 		params = {
 			"pageSize": 10,
 			"page": 1,
@@ -73,7 +66,6 @@ class TestCinemaScope:
 
 		assert len(movies) <= params["pageSize"], "Слишком много фильмов на странице"
 
-
 		for movie in movies:
 			movie_id = movie.get("id", "без ID")
 
@@ -95,25 +87,17 @@ class TestCinemaScope:
 			assert movie_location is not None
 			assert movie_location in params["locations"]
 
-
-
-	print("\n✅ ВСЕ ПОЗИТИВНЫЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО")
 	def test_create_movie_negative(self, api_manager, movies_data):
-		print("6. Создание фильма без тела запроса")
-		response = api_manager.movies_api.create_movie({}, 400)
-
+		api_manager.movies_api.create_movie({}, 400)
 
 	def test_update_movie_negative(self, api_manager, created_movie, movies_data, update_payload):
-		print("7. Проверка обновления несуществующего фильма")
 		non_existent_id = created_movie + 1000
-		response = api_manager.movies_api.update_movie(non_existent_id, update_payload, 404)
+		api_manager.movies_api.update_movie(non_existent_id, update_payload, 404)
 
 	def test_delete_movie_negative(self, api_manager, created_movie, movies_data):
-		print("8. Проверка удаления несуществующего фильма")
-		response = api_manager.movies_api.delete_movie({}, 404)
+		api_manager.movies_api.delete_movie({}, 404)
 
 	def test_get_movies_list_negative(self, api_manager):
-		print("9. Проверяем фильтрацию списка фильмов с некорректными Params")
 		bad_params = {
 			"pageSize": 0,
 			"page": 0,
@@ -121,11 +105,4 @@ class TestCinemaScope:
 
 		}
 
-		list_response = api_manager.movies_api.get_movies_list(bad_params, expected_status=400)
-
-	print("\n✅ ВСЕ НЕГАТИВНЫЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО")
-
-
-
-
-
+		api_manager.movies_api.get_movies_list(bad_params, expected_status=400)
