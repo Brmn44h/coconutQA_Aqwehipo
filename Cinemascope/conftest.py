@@ -2,9 +2,14 @@ import requests
 from Cinemascope.constants import BASE_URL
 import pytest
 from Cinemascope.utils.data_generator import Datagenerator
+from Cinemascope.models.base_models import TestUser
 from Cinemascope.resources.user_creds import SuperAdminCreds
 from Cinemascope.api.api_manager import CinemaApiManager
 from Cinemascope.entities.user import User
+from Cinemascope.resources.user_roles import Roles
+import time
+import random
+
 ADMIN_CREDENTIALS = {
     "email": "api1@gmail.com",
     "password": "asdqwe123Q"
@@ -67,6 +72,7 @@ def user_session():
     for user in user_pool:
         user.close_session()
 
+
 @pytest.fixture
 def super_admin(user_session):
     new_session = user_session()
@@ -74,28 +80,81 @@ def super_admin(user_session):
     super_admin = User(
         SuperAdminCreds.USERNAME,
         SuperAdminCreds.PASSWORD,
-        "[SUPER_ADMIN]",
+        [Roles.SUPER_ADMIN.value],
         new_session)
 
     super_admin.api.auth_api.authenticate(*super_admin.creds)
     return super_admin
 
-@pytest.fixture
-def test_user():
-    import time
-    unique_email = f"testuser_{int(time.time())}@example.com"
-    return {
-        "email": unique_email,
-        "password": "password123",
-        "roles": ["USER"],
-        "fullName": "Test User"
-    }
 
+@pytest.fixture
+def test_user() -> TestUser:
+    random_password = Datagenerator.generate_random_password()
+
+    return TestUser(
+        email=Datagenerator.generate_random_email(),
+        fullName=Datagenerator.generate_random_name(),
+        password=random_password,
+        passwordRepeat=random_password,
+        roles=[Roles.USER.value]
+    )
 @pytest.fixture(scope="function")
 def creation_user_data(test_user):
-    updated_data = test_user.copy()
-    updated_data.update({
+    return TestUser(
+        email=test_user.email,
+        fullName=test_user.fullName,
+        password=test_user.password,
+        passwordRepeat=test_user.passwordRepeat,
+        roles=test_user.roles,
+        verified=True,
+        banned=False
+    )
+@pytest.fixture
+def common_user(user_session, super_admin, creation_user_data):
+    new_session = user_session()
+    unique_email = f"common_user_{int(time.time())}_{random.randint(1000, 9999)}@example.com"
+    super_admin.api.user_api.create_user({
+        "email": unique_email,
+        "password": creation_user_data.password,
+        "fullName": creation_user_data.fullName,
+        "roles": ["USER"],
         "verified": True,
         "banned": False
     })
-    return updated_data
+
+    common_user = User(
+        unique_email,
+        creation_user_data.password,
+        [Roles.USER.value],
+        new_session)
+    #
+
+    common_user.api.auth_api.authenticate(*common_user.creds)
+    return common_user
+
+
+@pytest.fixture
+def admin(user_session, super_admin, creation_user_data):
+    new_session = user_session()
+
+    admin = User(
+        creation_user_data['email'],
+        creation_user_data['password'],
+        [Roles.USER.value],
+        new_session)
+
+
+    super_admin.api.user_api.create_user(creation_user_data)
+    admin.api.auth_api.authenticate(*admin.creds)
+    return admin
+@pytest.fixture
+def registration_user_data():
+    random_password = Datagenerator.generate_random_password()
+
+    return {
+        "email": Datagenerator.generate_random_email(),
+        "fullName": Datagenerator.generate_random_name(),
+        "password": random_password,
+        "passwordRepeat": random_password,
+        "roles": [Roles.USER.value]
+    }
