@@ -9,7 +9,9 @@ from Cinemascope.entities.user import User
 from Cinemascope.resources.user_roles import Roles
 import time
 import random
-
+from sqlalchemy.orm import Session
+from db_requester.db_helpers import DBHelper
+from db_requester.db_client import get_db_session
 ADMIN_CREDENTIALS = {
     "email": "api1@gmail.com",
     "password": "asdqwe123Q"
@@ -113,6 +115,7 @@ def creation_user_data(test_user):
 def common_user(user_session, super_admin, creation_user_data):
     new_session = user_session()
     unique_email = f"common_user_{int(time.time())}_{random.randint(1000, 9999)}@example.com"
+
     super_admin.api.user_api.create_user({
         "email": unique_email,
         "password": creation_user_data.password,
@@ -158,3 +161,33 @@ def registration_user_data():
         "passwordRepeat": random_password,
         "roles": [Roles.USER.value]
     }
+
+@pytest.fixture(scope="module")
+def db_session() -> Session:
+    """
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    """
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
+@pytest.fixture(scope="function")
+def db_helper(db_session) -> DBHelper:
+    """
+    Фикстура для экземпляра хелпера
+    """
+    db_helper = DBHelper(db_session)
+    return db_helper
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+    """
+    Фикстура, которая создает тестового пользователя в БД
+    и удаляет его после завершения теста
+    """
+    user = db_helper.create_test_user(Datagenerator.generate_user_data())
+    yield user
+    # Cleanup после теста
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)

@@ -8,7 +8,7 @@ class MoviesAPI(CustomRequester):
             base_url = BASE_URL
         super().__init__(session=session, base_url=base_url)
 
-    def create_movie(self, movie_data, expected_status=200):
+    def create_movie(self, movie_data, expected_status=201):
         return self.send_request(
             method='POST',
             endpoint="/movies",
