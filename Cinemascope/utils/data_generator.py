@@ -58,7 +58,8 @@ class Datagenerator:
             "description": "Тестовое описание фильма для автоматизированного тестирования",
             "location": random.choice(["MSK", "SPB"]),
             "published": random.choice([True, False]),
-            "genreId": random.randint(1, 5)
+            "genreId": random.randint(1, 3),
+            "rating": random.randint(0, 10)
         }
 
     @staticmethod

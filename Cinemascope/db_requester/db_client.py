@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from resources.db_creds import MoviesDbCreds
+from Cinemascope.resources.db_creds import MoviesDbCreds
 
 USERNAME = MoviesDbCreds.USERNAME
 PASSWORD = MoviesDbCreds.PASSWORD

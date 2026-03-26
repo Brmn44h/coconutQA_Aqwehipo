@@ -1,3 +1,10 @@
+import sys
+import os
+
+
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
 import requests
 from Cinemascope.constants import BASE_URL
 import pytest
@@ -10,8 +17,8 @@ from Cinemascope.resources.user_roles import Roles
 import time
 import random
 from sqlalchemy.orm import Session
-from db_requester.db_helpers import DBHelper
-from db_requester.db_client import get_db_session
+from Cinemascope.db_requester.db_helpers import DBHelper
+from Cinemascope.db_requester.db_client import get_db_session
 ADMIN_CREDENTIALS = {
     "email": "api1@gmail.com",
     "password": "asdqwe123Q"
@@ -44,7 +51,7 @@ def movies_data():
 
 @pytest.fixture
 def created_movie(api_manager, movies_data):
-    response = api_manager.movies_api.create_movie(movies_data, 201)
+    response = api_manager.movies_api.create_movie(movies_data)
     return response.json()["id"]
 
 
@@ -141,8 +148,8 @@ def admin(user_session, super_admin, creation_user_data):
     new_session = user_session()
 
     admin = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        creation_user_data.email,
+        creation_user_data.password,
         [Roles.USER.value],
         new_session)
 
